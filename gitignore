@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+
+# Backup / Save files
+*.save
+nano.*.save
+
+# Logs
+*.log
+*.out
+*.err
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kafka / Spark distributions (large binaries)
+docker/kafka_2.13-3.6.0/
+docker/kafka_2.13-3.6.0.tgz
+docker/spark/
+
+# JARs (downloadable, not source code)
+jars/
+docker/jars/
+# (optional) ignore extra-jars if you don’t want to commit binaries
+# docker/extra-jars/
+
+# Runtime generated data
+tmp/
+spark-warehouse/
+metastore_db/
+derby.log
+data/
+commitlog/
+saved_caches/

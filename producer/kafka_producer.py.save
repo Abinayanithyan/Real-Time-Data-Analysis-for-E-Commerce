@@ -1,0 +1,166 @@
+# producer/kafka_producer.py
+import argparse
+import time
+import random
+import json
+from datetime import datetime
+from faker import Faker
+from kafka import KafkaProducer, KafkaError
+
+fake = Faker()
+
+def create_kafka_producer(bootstrap_servers: list) -> KafkaProducer:
+    """Create a Kafka producer with JSON serialization."""
+    return KafkaProducer(
+        bootstrap_servers=bootstrap_servers,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+        retries=5,  # retry if there are temporary errors
+        linger_ms=10  # small buffer to improve throughput
+    )
+
+def generate_transaction() -> dict:
+    """Generate a single fake e-commerce transaction."""
+    return {
+        "transaction_id": fake.uuid4(),
+        "user_id": fake.uuid4(),
+        "user_name": fake.name(),
+        "email": fake.email(),
+        "age": random.randint(18, 70),
+        "gender": random.choice(["Male", "Female", "Other"]),
+        "country": fake.country(),
+        "city": fake.city(),
+        "product_id": fake.uuid4(),
+        "product_name": random.choice(["Laptop", "Phone", "Headphones", "Shoes", "Watch", "Tablet"]),
+        "category": random.choice(["Electronics", "Fashion", "Home", "Sports", "Books"]),
+        "quantity": random.randint(1, 5),
+        "price": round(random.uniform(10, 2000), 2),
+        "payment_method": random.choice(["Credit Card", "Debit Card", "UPI", "Net Banking", "COD"]),
+        "transaction_status": random.choice(["Success", "Failed", "Pending"]),
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+def run_streaming(producer: KafkaProducer, topic: str, interval: float, count: int) -> None:
+    """Send transactions continuously at a fixed interval."""
+    print(f"🚀 Streaming {count} transactions to topic '{topic}' every {interval}s...")
+    for _ in range(count):
+        transaction = generate_transaction()
+        try:
+            producer.send(topic, value=transaction).get(timeout=10)
+            print(f"✅ Sent: {transaction['transaction_id']} | {transaction['product_name']} | ${transaction['price']}")
+        except KafkaError as e:
+            print(f"❌ Failed to send transaction: {e}")
+        time.sleep(interval)
+    print("✅ Finished streaming transactions.")
+
+def run_batch(producer: KafkaProducer, topic: str, rows: int) -> None:
+    """Send a large number of transactions quickly."""
+    print(f"📦 Batch sending {rows} transactions to topic '{topic}'...")
+    for _ in range(rows):
+        transaction = generate_transaction()
+        try:
+            producer.send(topic, value=transaction)
+        except KafkaError as e:
+            print(f"❌ Failed to send transaction: {e}")
+    producer.flush()
+    print(f"✅ Finished batch of {rows} transactions.")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Kafka E-commerce Transaction Producer")
+    parser.add_argument("--mode", choices=["stream", "batch"], default="stream", help="Mode to run the producer")
+    parser.add_argument("--interval", type=float, default=1, help="Interval between messages (stream mode)")
+    parser.add_argument("--count", type=int, default=10, help="Number of messages to send (stream mode)")
+    parser.add_argument("--rows", type=int, default=1000, help="Number of rows to generate (batch mode)")
+    parser.add_argument("--topic", type=str, default="transactions", help="Kafka topic to send messages to")
+    args = parser.parse_args()
+
+    producer = create_kafka_producer(bootstrap_servers=["kafka:29092"])
+
+    if args.mode == "stream":
+        run_streaming(producer, args.topic, args.interval, args.count)
+    elif args.mode == "batch":
+        run_batch(producer, args.topic, args.rows)
+
+    producer.close()
+# producer/kafka_producer.py
+import argparse
+import time
+import random
+import json
+from datetime import datetime
+from faker import Faker
+from kafka import KafkaProducer, KafkaError
+
+fake = Faker()
+
+def create_kafka_producer(bootstrap_servers: list) -> KafkaProducer:
+    """Create a Kafka producer with JSON serialization."""
+    return KafkaProducer(
+        bootstrap_servers=bootstrap_servers,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+        retries=5,  # retry if there are temporary errors
+        linger_ms=10  # small buffer to improve throughput
+    )
+
+def generate_transaction() -> dict:
+    """Generate a single fake e-commerce transaction."""
+    return {
+        "transaction_id": fake.uuid4(),
+        "user_id": fake.uuid4(),
+        "user_name": fake.name(),
+        "email": fake.email(),
+        "age": random.randint(18, 70),
+        "gender": random.choice(["Male", "Female", "Other"]),
+        "country": fake.country(),
+        "city": fake.city(),
+        "product_id": fake.uuid4(),
+        "product_name": random.choice(["Laptop", "Phone", "Headphones", "Shoes", "Watch", "Tablet"]),
+        "category": random.choice(["Electronics", "Fashion", "Home", "Sports", "Books"]),
+        "quantity": random.randint(1, 5),
+        "price": round(random.uniform(10, 2000), 2),
+        "payment_method": random.choice(["Credit Card", "Debit Card", "UPI", "Net Banking", "COD"]),
+        "transaction_status": random.choice(["Success", "Failed", "Pending"]),
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+def run_streaming(producer: KafkaProducer, topic: str, interval: float, count: int) -> None:
+    """Send transactions continuously at a fixed interval."""
+    print(f"🚀 Streaming {count} transactions to topic '{topic}' every {interval}s...")
+    for _ in range(count):
+        transaction = generate_transaction()
+        try:
+            producer.send(topic, value=transaction).get(timeout=10)
+            print(f"✅ Sent: {transaction['transaction_id']} | {transaction['product_name']} | ${transaction['price']}")
+        except KafkaError as e:
+            print(f"❌ Failed to send transaction: {e}")
+        time.sleep(interval)
+    print("✅ Finished streaming transactions.")
+
+def run_batch(producer: KafkaProducer, topic: str, rows: int) -> None:
+    """Send a large number of transactions quickly."""
+    print(f"📦 Batch sending {rows} transactions to topic '{topic}'...")
+    for _ in range(rows):
+        transaction = generate_transaction()
+        try:
+            producer.send(topic, value=transaction)
+        except KafkaError as e:
+            print(f"❌ Failed to send transaction: {e}")
+    producer.flush()
+    print(f"✅ Finished batch of {rows} transactions.")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Kafka E-commerce Transaction Producer")
+    parser.add_argument("--mode", choices=["stream", "batch"], default="stream", help="Mode to run the producer")
+    parser.add_argument("--interval", type=float, default=1, help="Interval between messages (stream mode)")
+    parser.add_argument("--count", type=int, default=10, help="Number of messages to send (stream mode)")
+    parser.add_argument("--rows", type=int, default=1000, help="Number of rows to generate (batch mode)")
+    parser.add_argument("--topic", type=str, default="transactions", help="Kafka topic to send messages to")
+    args = parser.parse_args()
+
+    producer = create_kafka_producer(bootstrap_servers=["kafka:29092"])
+
+    if args.mode == "stream":
+        run_streaming(producer, args.topic, args.interval, args.count)
+    elif args.mode == "batch":
+        run_batch(producer, args.topic, args.rows)
+
+    producer.close()
