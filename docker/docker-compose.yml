@@ -45,7 +45,6 @@ services:
       - CASSANDRA_DC=datacenter1
       - CASSANDRA_RACK=rack1
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      # Memory settings for development
       - MAX_HEAP_SIZE=1G
       - HEAP_NEWSIZE=200M
     networks:
@@ -58,13 +57,14 @@ services:
       start_period: 60s
     volumes:
       - cassandra_data:/var/lib/cassandra
-    # Resource limits
+      - ../cassandra:/cassandra   # ← this makes init.cql visible inside container
     deploy:
       resources:
         limits:
           memory: 2G
         reservations:
           memory: 1G
+
 
   spark-master:
     image: apache/spark:3.5.0-scala2.12-java11-python3-ubuntu
